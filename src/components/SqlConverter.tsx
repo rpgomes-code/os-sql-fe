@@ -148,7 +148,7 @@ export default function SqlConverter() {
         setConversionState('converting');
 
         try {
-            // Wait a minimum time (750ms) to show the progress animation
+            // Wait a minimum time (750 ms) to show the progress animation
             const minTimePromise = new Promise(resolve => setTimeout(resolve, 750));
 
             const conversionPromise = sqlMigrationService.convertQuery(data.sqlQuery);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAtom } from 'jotai';
 import { tokenAtom, isAuthenticatedAtom, initAuth } from '@/store/auth';
 import { authService } from '@/lib/api';
@@ -62,7 +62,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
 
                     setProgress(progressValue);
 
-                    // Token is about to expire (less than 10 minutes)
+                    // The Token is about to expire (less than 10 minutes)
                     if (timeLeft < 10 * 60 * 1000 && timeLeft > 0) {
                         toast.warning("Authentication token is about to expire", {
                             description: "Your session will expire soon. Consider refreshing your token.",
@@ -74,12 +74,12 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
                         });
                     }
 
-                    // Token has expired
+                    // The Token has expired
                     if (timeLeft <= 0) {
                         toast.error("Authentication token has expired", {
                             description: "Your session has expired. Please log in again.",
                         });
-                        logout();
+                        logout().then(() => {});
                     }
                 }
             }, 60000); // Check every minute
@@ -95,12 +95,12 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
 
                 setProgress(progressValue);
 
-                // If token has already expired
+                // If the token has already expired
                 if (timeLeft <= 0) {
                     toast.error("Authentication token has expired", {
                         description: "Your session has expired. Please log in again.",
                     });
-                    logout();
+                    logout().then(() => {});
                 }
             }
         }
@@ -130,7 +130,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
 
             toast.success("Authentication successful", {
                 icon: <CheckCircle className="text-green-500 h-5 w-5" />,
-                description: "You now have access to all features of the SQL Migration Tool.",
+                description: "You now have access to all features of SQL Toolkit.",
             });
             return true;
         } catch (error) {
@@ -196,7 +196,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
                         transition={{ duration: 0.5 }}
                         className="w-full"
                     >
-                        <Card className="max-w-1/4 mx-auto border-2 shadow-lg overflow-hidden pt-0">
+                        <Card className="max-w-2/6 mx-auto border-2 shadow-lg overflow-hidden pt-0">
                             <CardHeader className="bg-primary/10 border-b p-8">
                                 <div className="flex justify-center mb-4">
                                     <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center">
@@ -205,13 +205,10 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
                                 </div>
                                 <CardTitle className="text-xl text-center">Authentication Required</CardTitle>
                                 <CardDescription className="text-center">
-                                    Secure access to the SQL Migration Tool
+                                    Secure access to the Outsystems SQL Toolkit
                                 </CardDescription>
                             </CardHeader>
-                            <CardContent className="flex flex-col items-center pt-6 pb-4 px-6">
-                                <p className="mb-6 text-muted-foreground text-center">
-                                    You need to authenticate to use the SQL Migration Tool. Click the button below to generate a secure authentication token.
-                                </p>
+                            <CardContent className="flex flex-col items-center px-6">
                                 <div className="grid gap-6 w-full">
                                     <div className="bg-muted/40 rounded-md p-4 border border-dashed">
                                         <div className="flex items-center gap-2 mb-2">
@@ -238,6 +235,9 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
                                             </>
                                         )}
                                     </Button>
+                                    <span className="text-muted-foreground text-center text-xs">
+                                        Click the button to generate an authentication token.
+                                    </span>
                                 </div>
                             </CardContent>
                         </Card>

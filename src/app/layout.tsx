@@ -27,8 +27,8 @@ const fontMono = Roboto_Mono({
 
 // Define metadata for SEO and browser tab info
 export const metadata: Metadata = {
-    title: 'SQL Migration Tool | OutSystems',
-    description: 'Convert SQL Server queries to PostgresSQL for OutSystems ODC',
+    title: 'SQL Toolkit | OutSystems',
+    description: 'Every tool you need for your SQL in OutSystems.',
     keywords: 'SQL, PostgresSQL, SQL Server, migration, database, convert, OutSystems',
     authors: [{ name: 'Rui Pedro Gomes (rpgomes)' }],
     icons: {
@@ -75,7 +75,7 @@ export default function RootLayout({
                                 <div className="w-7 h-7 bg-primary rounded flex items-center justify-center text-primary-foreground font-bold">
                                     OS
                                 </div>
-                                <span className="font-bold text-lg tracking-tight">SQL Migration Tool</span>
+                                <span className="font-bold text-lg tracking-tight">SQL Toolkit</span>
                             </div>
                             {/* Navigation with theme switcher and GitHub link */}
                             <nav className="flex items-center gap-4">
@@ -115,7 +115,7 @@ export default function RootLayout({
         {/* Footer with responsive layout */}
         <footer className="border-t bg-muted/30 px-6">
             <div className="w-full flex flex-col md:flex-row items-center justify-between py-6 text-sm text-muted-foreground">
-                <p>&copy; {new Date().getFullYear()} OutSystems SQL Migration Tool</p>
+                <p>&copy; {new Date().getFullYear()} OutSystems SQL Toolkit</p>
                 <nav className="flex items-center gap-4 mt-4 md:mt-0">
                     <a href="#" className="hover:text-foreground transition-colors">Documentation</a>
                     <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
