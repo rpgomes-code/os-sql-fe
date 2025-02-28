@@ -112,6 +112,9 @@ export default function SqlConverter() {
         },
     });
 
+    // Watch the sqlQuery field to enable/disable the convert button properly
+    const sqlQuery = form.watch('sqlQuery');
+
     // Simulated conversion progress
     useEffect(() => {
         let progressInterval: NodeJS.Timeout;
@@ -370,7 +373,7 @@ export default function SqlConverter() {
                                         Convert SQL Server, Oracle, or MySQL queries to PostgreSQL format for OutSystems ODC.
                                     </CardDescription>
                                 </CardHeader>
-                                <CardContent className="space-y-6">
+                                <CardContent className="space-y-6 pt-6">
                                     <FormField
                                         control={form.control}
                                         name="sqlType"
@@ -435,14 +438,14 @@ export default function SqlConverter() {
                                         variant="outline"
                                         type="button"
                                         onClick={resetForm}
-                                        disabled={isConverting || form.getValues('sqlQuery') === ''}
+                                        disabled={isConverting || !sqlQuery}
                                     >
                                         <RefreshCw className="mr-2 h-4 w-4" />
                                         Reset
                                     </Button>
                                     <Button
                                         type="submit"
-                                        disabled={isConverting || form.getValues('sqlQuery') === ''}
+                                        disabled={isConverting || !sqlQuery}
                                         className="flex items-center gap-2"
                                     >
                                         {isConverting ? (
