@@ -1,43 +1,34 @@
 'use client';
 
-import { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AuthProvider from '@/components/AuthProvider';
 import SqlConverter from '@/components/SqlConverter';
 import LogsViewer from '@/components/LogsViewer';
+import { Code, FileText } from 'lucide-react';
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState('converter');
+    return (
+        <AuthProvider>
+            <Tabs defaultValue="converter" className="w-full">
+                <TabsList className="grid w-full max-w-md mx-auto mb-6 grid-cols-2">
+                    <TabsTrigger value="converter" className="flex items-center gap-2">
+                        <Code size={16} />
+                        SQL Converter
+                    </TabsTrigger>
+                    <TabsTrigger value="logs" className="flex items-center gap-2">
+                        <FileText size={16} />
+                        System Logs
+                    </TabsTrigger>
+                </TabsList>
 
-  return (
-      <AuthProvider>
-        <div className="mb-6">
-          <div className="border-b border-gray-200">
-            <nav className="-mb-px flex">
-              <button
-                  onClick={() => setActiveTab('converter')}
-                  className={`py-2 px-4 text-center border-b-2 font-medium text-sm ${
-                      activeTab === 'converter'
-                          ? 'border-blue-500 text-blue-600'
-                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-              >
-                SQL Converter
-              </button>
-              <button
-                  onClick={() => setActiveTab('logs')}
-                  className={`py-2 px-4 text-center border-b-2 font-medium text-sm ${
-                      activeTab === 'logs'
-                          ? 'border-blue-500 text-blue-600'
-                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-              >
-                System Logs
-              </button>
-            </nav>
-          </div>
-        </div>
+                <TabsContent value="converter">
+                    <SqlConverter />
+                </TabsContent>
 
-        {activeTab === 'converter' ? <SqlConverter /> : <LogsViewer />}
-      </AuthProvider>
-  );
+                <TabsContent value="logs">
+                    <LogsViewer />
+                </TabsContent>
+            </Tabs>
+        </AuthProvider>
+    );
 }

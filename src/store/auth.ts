@@ -1,5 +1,6 @@
 import { atom } from 'jotai';
 import { authService } from '@/lib/api';
+import { toast } from "sonner";
 
 // Auth state atoms
 export const tokenAtom = atom<string | null>(null);
@@ -19,6 +20,7 @@ export const initAuth = () => {
                     } else {
                         // Clear invalid token
                         localStorage.removeItem('bearerToken');
+                        toast.error("Stored token is invalid. Please login again.");
                     }
                 })
                 .catch(() => {

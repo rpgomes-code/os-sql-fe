@@ -1,10 +1,12 @@
 import axios from 'axios';
+import { toast } from "sonner";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // Create axios instance
 const api = axios.create({
     baseURL: API_URL,
+    timeout: 10000,
 });
 
 // Add a request interceptor to include token
@@ -17,6 +19,21 @@ api.interceptors.request.use(
         return config;
     },
     (error) => Promise.reject(error)
+);
+
+// Add response and error interceptors
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response) {
+            toast.error("API Error: " + (error.response.data?.message || "Request failed"));
+        } else if (error.request) {
+            toast.error("Network Error: No response received from the server");
+        } else {
+            toast.error("Error: " + error.message);
+        }
+        return Promise.reject(error);
+    }
 );
 
 // Authentication service
