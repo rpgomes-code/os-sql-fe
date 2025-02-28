@@ -3,13 +3,21 @@
 import { useState, useEffect } from 'react';
 import { logsService } from '@/lib/api';
 import { toast } from "sonner";
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { FileText, RefreshCw, XCircle, AlertTriangle, Info, CheckCircle, X } from 'lucide-react';
+import { FileText, RefreshCw, XCircle, AlertTriangle, Info, CheckCircle, X, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { MotionDiv } from '@/components/motion';
+import {
+    Pagination,
+    PaginationContent,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious
+} from '@/components/ui/pagination';
 
 type Log = {
     log_id: string;
@@ -28,21 +36,43 @@ export default function LogsViewer() {
     const [isLoading, setIsLoading] = useState(true);
     const [selectedLog, setSelectedLog] = useState<Log | null>(null);
 
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const logsPerPage = 10; // Number of logs to display per page
+
     useEffect(() => {
         fetchLogs();
-    }, []);
+    }, [currentPage]); // Refetch logs when page changes
 
     const fetchLogs = async () => {
         setIsLoading(true);
         try {
-            const logs = await logsService.getLogs();
-            setLogs(logs);
+            // In a real implementation, you might want to modify your API to support pagination
+            // For now, we'll simulate pagination on the client side
+            const allLogs = await logsService.getLogs();
+
+            // Calculate total pages
+            const total = Math.ceil(allLogs.length / logsPerPage);
+            setTotalPages(total || 1); // Ensure at least 1 page even if no logs
+
+            // Get logs for current page
+            const startIndex = (currentPage - 1) * logsPerPage;
+            const paginatedLogs = allLogs.slice(startIndex, startIndex + logsPerPage);
+
+            setLogs(paginatedLogs);
         } catch (error) {
             console.error('Error fetching logs:', error);
             toast.error("Failed to fetch logs");
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+        // Reset selected log when changing pages
+        setSelectedLog(null);
     };
 
     const getSeverityColor = (severity: string) => {
@@ -74,6 +104,26 @@ export default function LogsViewer() {
         }
     };
 
+    // Generate page numbers to display in pagination
+    const getPageNumbers = () => {
+        const pages = [];
+        const maxPagesToShow = 5; // Show at most 5 page numbers at a time
+
+        let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+        let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+
+        // Adjust start page if end page is maxed out
+        if (endPage === totalPages) {
+            startPage = Math.max(1, endPage - maxPagesToShow + 1);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            pages.push(i);
+        }
+
+        return pages;
+    };
+
     return (
         <MotionDiv
             initial={{ opacity: 0, y: 20 }}
@@ -90,9 +140,14 @@ export default function LogsViewer() {
                         variant="outline"
                         size="sm"
                         onClick={fetchLogs}
+                        disabled={isLoading}
                         className="flex items-center gap-1 h-8"
                     >
-                        <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} />
+                        {isLoading ? (
+                            <Loader2 size={14} className="animate-spin" />
+                        ) : (
+                            <RefreshCw size={14} />
+                        )}
                         Refresh
                     </Button>
                 </CardHeader>
@@ -182,6 +237,41 @@ export default function LogsViewer() {
                         </>
                     )}
                 </CardContent>
+
+                {/* Pagination Footer */}
+                {!isLoading && logs.length > 0 && (
+                    <CardFooter className="flex justify-center pt-2 pb-6">
+                        <Pagination>
+                            <PaginationContent>
+                                <PaginationItem>
+                                    <PaginationPrevious
+                                        onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                    />
+                                </PaginationItem>
+
+                                {getPageNumbers().map(page => (
+                                    <PaginationItem key={page}>
+                                        <PaginationLink
+                                            isActive={currentPage === page}
+                                            onClick={() => handlePageChange(page)}
+                                            className="cursor-pointer"
+                                        >
+                                            {page}
+                                        </PaginationLink>
+                                    </PaginationItem>
+                                ))}
+
+                                <PaginationItem>
+                                    <PaginationNext
+                                        onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                    />
+                                </PaginationItem>
+                            </PaginationContent>
+                        </Pagination>
+                    </CardFooter>
+                )}
             </Card>
         </MotionDiv>
     );

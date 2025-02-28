@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Clipboard, AlertTriangle, Database, ArrowRightLeft } from 'lucide-react';
+import { Clipboard, AlertTriangle, Database, ArrowRightLeft, Loader2, Check } from 'lucide-react';
 import { MotionDiv } from '@/components/motion';
 import { cn } from '@/lib/utils';
 
@@ -21,6 +21,7 @@ type FormData = {
 
 export default function SqlConverter() {
     const [isConverting, setIsConverting] = useState(false);
+    const [isCopying, setIsCopying] = useState(false);
     const [convertedQuery, setConvertedQuery] = useState('');
     const [warnings, setWarnings] = useState<string[]>([]);
 
@@ -48,9 +49,20 @@ export default function SqlConverter() {
         }
     };
 
-    const copyToClipboard = () => {
-        navigator.clipboard.writeText(convertedQuery);
-        toast.success("SQL query copied to clipboard");
+    const copyToClipboard = async () => {
+        setIsCopying(true);
+        try {
+            await navigator.clipboard.writeText(convertedQuery);
+            toast.success("SQL query copied to clipboard");
+        } catch (error) {
+            console.error('Failed to copy:', error);
+            toast.error("Failed to copy to clipboard");
+        } finally {
+            // Add a slight delay to show the copying state
+            setTimeout(() => {
+                setIsCopying(false);
+            }, 800);
+        }
     };
 
     return (
@@ -78,6 +90,7 @@ export default function SqlConverter() {
                                 placeholder="Paste your SQL Server query here..."
                                 className={cn(errors.sqlQuery && "border-destructive")}
                                 {...register('sqlQuery', { required: 'Query is required' })}
+                                disabled={isConverting}
                             />
                             {errors.sqlQuery && (
                                 <p className="mt-1 text-sm text-destructive">{errors.sqlQuery.message}</p>
@@ -92,11 +105,7 @@ export default function SqlConverter() {
                             >
                                 {isConverting ? (
                                     <>
-                                        <MotionDiv
-                                            animate={{ rotate: 360 }}
-                                            transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                                            className="w-4 h-4 border-2 border-t-transparent border-white rounded-full"
-                                        />
+                                        <Loader2 className="h-4 w-4 animate-spin" />
                                         Converting...
                                     </>
                                 ) : (
@@ -145,10 +154,20 @@ export default function SqlConverter() {
                                     variant="ghost"
                                     size="sm"
                                     onClick={copyToClipboard}
+                                    disabled={isCopying}
                                     className="flex items-center gap-1 text-xs"
                                 >
-                                    <Clipboard size={14} />
-                                    Copy to Clipboard
+                                    {isCopying ? (
+                                        <>
+                                            <Check size={14} className="text-green-500" />
+                                            Copied!
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Clipboard size={14} />
+                                            Copy to Clipboard
+                                        </>
+                                    )}
                                 </Button>
                             </div>
                             <div className="relative rounded-md overflow-hidden border">
