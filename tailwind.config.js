@@ -9,10 +9,18 @@ module.exports = {
     ],
     theme: {
         container: {
-            center: true,
-            padding: "2rem",
+            center: false, // Changed from true to false
+            padding: {
+                DEFAULT: "1rem",
+                sm: "1.5rem",
+                md: "2rem",
+            },
             screens: {
-                "2xl": "1400px",
+                sm: "640px",
+                md: "768px",
+                lg: "1024px",
+                xl: "1280px",
+                "2xl": "100%", // Changed to 100% to allow full width
             },
         },
         extend: {
@@ -70,7 +78,31 @@ module.exports = {
                 "accordion-down": "accordion-down 0.2s ease-out",
                 "accordion-up": "accordion-up 0.2s ease-out",
             },
+            width: {
+                'screen-full': '100vw',
+                'full-width': '100%',
+            },
         },
     },
-    plugins: [require("tailwindcss-animate")],
+    plugins: [
+        require("tailwindcss-animate"),
+        // Add a plugin to create full-width utilities
+        function({ addUtilities }) {
+            const newUtilities = {
+                '.w-screen-full': {
+                    width: '100vw',
+                    maxWidth: '100vw',
+                },
+                '.w-full-content': {
+                    width: '100%',
+                    maxWidth: '100%',
+                },
+                '.prevent-overflow': {
+                    maxWidth: '100%',
+                    overflowX: 'hidden',
+                },
+            }
+            addUtilities(newUtilities)
+        }
+    ],
 }

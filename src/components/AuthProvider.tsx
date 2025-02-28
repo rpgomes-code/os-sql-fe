@@ -185,7 +185,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     };
 
     return (
-        <div className="min-h-[calc(100vh-15rem)]">
+        <div className="min-h-[calc(100vh-15rem)] max-w-10/12 mx-auto">
             <AnimatePresence mode="wait">
                 {!isAuthenticated ? (
                     <MotionDiv
@@ -194,8 +194,9 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.9 }}
                         transition={{ duration: 0.5 }}
+                        className="w-full"
                     >
-                        <Card className="max-w-md mx-auto mt-12 border-2 shadow-lg overflow-hidden pt-0">
+                        <Card className="max-w-1/4 mx-auto border-2 shadow-lg overflow-hidden pt-0">
                             <CardHeader className="bg-primary/10 border-b p-8">
                                 <div className="flex justify-center mb-4">
                                     <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center">
@@ -248,8 +249,9 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.5 }}
+                        className="w-full"
                     >
-                        <div className="flex items-center justify-between py-4 mb-8 rounded-lg bg-muted/30 px-4 border">
+                        <div className="flex items-center justify-between py-4 mb-8 rounded-lg bg-muted/30 px-4 border w-full">
                             <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
                                     <Unlock className="h-4 w-4 text-primary" />
@@ -320,7 +322,9 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
                                 </TooltipProvider>
                             </div>
                         </div>
-                        {children}
+                        <div className="w-full">
+                            {children}
+                        </div>
                     </MotionDiv>
                 )}
             </AnimatePresence>

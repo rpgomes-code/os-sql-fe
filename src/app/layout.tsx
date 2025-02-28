@@ -69,7 +69,7 @@ export default function RootLayout({
                     transition={{ duration: 0.5 }}
                 >
                     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-md">
-                        <div className="container flex h-14 items-center justify-between px-6">
+                        <div className="w-full flex h-14 items-center justify-between px-6">
                             {/* Logo and brand name */}
                             <div className="flex items-center gap-2">
                                 <div className="w-7 h-7 bg-primary rounded flex items-center justify-center text-primary-foreground font-bold">
@@ -80,7 +80,6 @@ export default function RootLayout({
                             {/* Navigation with theme switcher and GitHub link */}
                             <nav className="flex items-center gap-4">
                                 <ThemeSwitcher />
-
                                 <a
                                     href="https://github.com/yourusername/sql-migration-tool"
                                     target="_blank"
@@ -108,14 +107,14 @@ export default function RootLayout({
         </header>
         </MotionDiv>
 
-        {/* Main content area with responsive padding */}
-        <main className="flex-1 container py-10 md:py-12">
+        {/* Main content area with full width */}
+        <main className="flex-1 w-full py-10 md:py-12 px-6">
             {children}
         </main>
 
         {/* Footer with responsive layout */}
         <footer className="border-t bg-muted/30 px-6">
-            <div className="container flex flex-col md:flex-row items-center justify-between py-6 text-sm text-muted-foreground">
+            <div className="w-full flex flex-col md:flex-row items-center justify-between py-6 text-sm text-muted-foreground">
                 <p>&copy; {new Date().getFullYear()} OutSystems SQL Migration Tool</p>
                 <nav className="flex items-center gap-4 mt-4 md:mt-0">
                     <a href="#" className="hover:text-foreground transition-colors">Documentation</a>

@@ -333,3 +333,37 @@
     }
   }
 }
+
+/* Add these classes to your existing globals.css */
+.full-width-container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0 1rem;
+}
+
+@layer utilities {
+  .w-screen-full {
+    width: 100vw;
+    max-width: 100%;
+  }
+
+  .prevent-overflow {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .responsive-width {
+    width: 100%;
+  }
+}
+
+/* Improve container behavior in mobile views */
+@media (max-width: 640px) {
+  .container {
+    width: 100%;
+    max-width: 100%;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
