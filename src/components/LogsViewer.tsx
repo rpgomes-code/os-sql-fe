@@ -70,13 +70,12 @@ type Log = {
 };
 
 export default function LogsViewer() {
-    const [logs, setLogs] = useState<Log[]>([]);
+    const [allLogs, setAllLogs] = useState<Log[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedLog, setSelectedLog] = useState<Log | null>(null);
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
     const logsPerPage = 10; // Number of logs to display per page
 
     // Filtering state
@@ -87,25 +86,19 @@ export default function LogsViewer() {
     const [isFiltering, setIsFiltering] = useState(false);
 
     useEffect(() => {
-        fetchLogs();
-    }, [currentPage]); // Refetch logs when page changes
+        fetchLogs().then(() => {});
+    }, []); // Only fetch logs on component mount
+
+    // Reset to first page when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, filterSeverity, filterType, dateRange]);
 
     const fetchLogs = async () => {
         setIsLoading(true);
         try {
-            // In a real implementation, you might want to modify your API to support pagination
-            // For now, we'll simulate pagination on the client side
-            const allLogs = await logsService.getLogs();
-
-            // Calculate total pages
-            const total = Math.ceil(allLogs.length / logsPerPage);
-            setTotalPages(total || 1); // Ensure at least 1 page even if no logs
-
-            // Get logs for current page
-            const startIndex = (currentPage - 1) * logsPerPage;
-            const paginatedLogs = allLogs.slice(startIndex, startIndex + logsPerPage);
-
-            setLogs(paginatedLogs);
+            const logs = await logsService.getLogs();
+            setAllLogs(logs);
         } catch (error) {
             console.error('Error fetching logs:', error);
             toast.error("Failed to fetch logs");
@@ -113,6 +106,45 @@ export default function LogsViewer() {
             setIsLoading(false);
         }
     };
+
+    // Apply filters to all logs
+    const filteredLogs = useMemo(() => {
+        return allLogs.filter(log => {
+            // Filter by search term
+            const matchesSearch = searchTerm === '' ||
+                log.log_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                log.log_endpoint.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                log.log_message.toLowerCase().includes(searchTerm.toLowerCase());
+
+            // Filter by severity
+            const matchesSeverity = filterSeverity === 'all' || log.log_severity === filterSeverity;
+
+            // Filter by type
+            const matchesType = filterType === 'all' || log.log_type === filterType;
+
+            // Filter by date range
+            let matchesDateRange = true;
+            if (dateRange.start) {
+                matchesDateRange = matchesDateRange && new Date(log.created_at) >= dateRange.start;
+            }
+            if (dateRange.end) {
+                const endDate = new Date(dateRange.end);
+                endDate.setHours(23, 59, 59, 999); // End of the day
+                matchesDateRange = matchesDateRange && new Date(log.created_at) <= endDate;
+            }
+
+            return matchesSearch && matchesSeverity && matchesType && matchesDateRange;
+        });
+    }, [allLogs, searchTerm, filterSeverity, filterType, dateRange]);
+
+    // Calculate total pages based on filtered logs
+    const totalPages = Math.max(1, Math.ceil(filteredLogs.length / logsPerPage));
+
+    // Get current page of logs
+    const currentLogs = useMemo(() => {
+        const startIndex = (currentPage - 1) * logsPerPage;
+        return filteredLogs.slice(startIndex, startIndex + logsPerPage);
+    }, [filteredLogs, currentPage, logsPerPage]);
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
@@ -187,7 +219,7 @@ export default function LogsViewer() {
     // Generate page numbers to display in pagination
     const getPageNumbers = () => {
         const pages = [];
-        const maxPagesToShow = 5; // Show at most 5 page numbers at a time
+        const maxPagesToShow = 5; // Show at most 5-page numbers at a time
 
         let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
         const endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
@@ -203,36 +235,6 @@ export default function LogsViewer() {
 
         return pages;
     };
-
-    // Apply filters
-    const filteredLogs = useMemo(() => {
-        return logs.filter(log => {
-            // Filter by search term
-            const matchesSearch = searchTerm === '' ||
-                log.log_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                log.log_endpoint.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                log.log_message.toLowerCase().includes(searchTerm.toLowerCase());
-
-            // Filter by severity
-            const matchesSeverity = filterSeverity === 'all' || log.log_severity === filterSeverity;
-
-            // Filter by type
-            const matchesType = filterType === 'all' || log.log_type === filterType;
-
-            // Filter by date range
-            let matchesDateRange = true;
-            if (dateRange.start) {
-                matchesDateRange = matchesDateRange && new Date(log.created_at) >= dateRange.start;
-            }
-            if (dateRange.end) {
-                const endDate = new Date(dateRange.end);
-                endDate.setHours(23, 59, 59, 999); // End of the day
-                matchesDateRange = matchesDateRange && new Date(log.created_at) <= endDate;
-            }
-
-            return matchesSearch && matchesSeverity && matchesType && matchesDateRange;
-        });
-    }, [logs, searchTerm, filterSeverity, filterType, dateRange]);
 
     const hasActiveFilters = searchTerm !== '' || filterSeverity !== 'all' || filterType !== 'all' || dateRange.start || dateRange.end;
 
@@ -495,7 +497,7 @@ export default function LogsViewer() {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {filteredLogs.map((log) => (
+                                        {currentLogs.map((log) => (
                                             <TableRow
                                                 key={log.log_id}
                                                 className={cn(
