@@ -259,7 +259,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
                                 <div className="flex flex-col gap-1">
                                     <div className="flex items-center gap-2">
                                         <p className="text-sm font-medium">Authenticated User</p>
-                                        <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-900/50">
+                                        <Badge variant="outline" className="bg-green-100 text-green-800 border-green-400 dark:bg-green-900/30 dark:text-green-400 py-0.5 px-2 rounded-full">
                                             Active
                                         </Badge>
                                     </div>
