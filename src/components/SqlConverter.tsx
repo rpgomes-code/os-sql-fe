@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -35,6 +35,7 @@ import {
     SelectValue
 } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
+import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip";
 
 // Validation schema
 const formSchema = z.object({
@@ -185,16 +186,41 @@ export default function SqlConverter() {
         }
     };
 
+    // Updated copyToClipboard function with a fallback mechanism
     const copyToClipboard = async () => {
         setIsCopying(true);
         try {
-            await navigator.clipboard.writeText(convertedQuery);
+            // First try using the Clipboard API if available
+            if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+                await navigator.clipboard.writeText(convertedQuery);
+            } else {
+                // Fallback for environments where Clipboard API is not available
+                const textArea = document.createElement('textarea');
+                textArea.value = convertedQuery;
+                // Make the textarea out of viewport
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textArea);
+
+                if (!successful) {
+                    throw new Error('Failed to copy text using execCommand');
+                }
+            }
+
             toast.success("SQL query copied to clipboard", {
                 icon: <Copy className="h-4 w-4" />,
             });
         } catch (error) {
             console.error('Failed to copy:', error);
-            toast.error("Failed to copy to clipboard");
+            toast.error("Failed to copy to clipboard", {
+                description: "Your browser might restrict clipboard access."
+            });
         } finally {
             // Add a slight delay to show the copying state
             setTimeout(() => {
@@ -509,26 +535,44 @@ export default function SqlConverter() {
 
                                         <div className="relative rounded-md overflow-hidden border">
                                             <div className="absolute right-2 top-2 z-10 flex gap-2">
-                                                <Button
-                                                    size="sm"
-                                                    variant="secondary"
-                                                    className="h-8 bg-primary/90 text-primary-foreground hover:bg-primary/70"
-                                                    onClick={copyToClipboard}
-                                                >
-                                                    {isCopying ? (
-                                                        <CheckCircle className="h-4 w-4" />
-                                                    ) : (
-                                                        <Copy className="h-4 w-4" />
-                                                    )}
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    variant="secondary"
-                                                    className="h-8 bg-primary/90 text-primary-foreground hover:bg-primary/70"
-                                                    onClick={downloadQueryAsFile}
-                                                >
-                                                    <DownloadCloud className="h-4 w-4" />
-                                                </Button>
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="secondary"
+                                                                className="h-8 bg-primary/90 text-primary-foreground hover:bg-primary/70"
+                                                                onClick={copyToClipboard}
+                                                            >
+                                                                {isCopying ? (
+                                                                    <CheckCircle className="h-4 w-4" />
+                                                                ) : (
+                                                                    <Copy className="h-4 w-4" />
+                                                                )}
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>Copy SQL</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="secondary"
+                                                                className="h-8 bg-primary/90 text-primary-foreground hover:bg-primary/70"
+                                                                onClick={downloadQueryAsFile}
+                                                            >
+                                                                <DownloadCloud className="h-4 w-4" />
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>Download SQL</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
                                             </div>
                                             <SyntaxHighlighter
                                                 language="sql"
