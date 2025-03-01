@@ -7,14 +7,30 @@ import * as z from 'zod';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark, prism } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { toast } from "sonner";
-import { sqlMigrationService } from '@/lib/api';
+import { sqlMigrationService, sqlFormattingService } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Clipboard, DownloadCloud, AlertTriangle, Database, ArrowRightLeft, Loader2, CheckCircle, XCircle, Copy, Upload, RefreshCw, Code, FileCode } from 'lucide-react';
+import {
+    Clipboard,
+    DownloadCloud,
+    AlertTriangle,
+    Database,
+    ArrowRightLeft,
+    Loader2,
+    CheckCircle,
+    XCircle,
+    Copy,
+    Upload,
+    RefreshCw,
+    Code,
+    FileCode,
+    AlignLeft, // For formatting
+    Minimize // For minifying
+} from 'lucide-react';
 import { MotionDiv } from '@/components/motion';
 import { useTheme } from 'next-themes';
 import { AnimatePresence } from 'framer-motion';
@@ -35,7 +51,18 @@ import {
     SelectValue
 } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
-import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger
+} from "@/components/ui/tooltip";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // Validation schema
 const formSchema = z.object({
@@ -94,6 +121,8 @@ LIMIT 10`
 
 export default function SqlConverter() {
     const [isConverting, setIsConverting] = useState(false);
+    const [isFormatting, setIsFormatting] = useState(false);
+    const [isMinifying, setIsMinifying] = useState(false);
     const [isCopying, setIsCopying] = useState(false);
     const [conversionState, setConversionState] = useState<'idle' | 'converting' | 'success' | 'error'>('idle');
     const [convertedQuery, setConvertedQuery] = useState('');
@@ -183,6 +212,110 @@ export default function SqlConverter() {
             });
         } finally {
             setIsConverting(false);
+        }
+    };
+
+    // Handle SQL formatting
+    const handleFormatQuery = async () => {
+        if (!sqlQuery) return;
+
+        setIsFormatting(true);
+
+        try {
+            const result = await sqlFormattingService.formatQuery(sqlQuery);
+
+            if (result.success) {
+                form.setValue('sqlQuery', result.formatted_query);
+                toast.success("SQL query formatted", {
+                    icon: <AlignLeft className="h-4 w-4" />,
+                });
+            } else {
+                toast.error("Failed to format SQL", {
+                    description: result.warnings?.join(' ') || "Unknown error occurred",
+                });
+            }
+        } catch (error) {
+            console.error('Error formatting query:', error);
+            toast.error("Error connecting to the formatting API");
+        } finally {
+            setIsFormatting(false);
+        }
+    };
+
+    // Handle SQL minification
+    const handleMinifyQuery = async () => {
+        if (!sqlQuery) return;
+
+        setIsMinifying(true);
+
+        try {
+            const result = await sqlFormattingService.minifyQuery(sqlQuery);
+
+            if (result.success) {
+                form.setValue('sqlQuery', result.formatted_query);
+                toast.success("SQL query minified", {
+                    icon: <Minimize className="h-4 w-4" />,
+                });
+            } else {
+                toast.error("Failed to minify SQL", {
+                    description: result.warnings?.join(' ') || "Unknown error occurred",
+                });
+            }
+        } catch (error) {
+            console.error('Error minifying query:', error);
+            toast.error("Error connecting to the minification API");
+        } finally {
+            setIsMinifying(false);
+        }
+    };
+
+    // Format output query
+    const formatOutputQuery = async () => {
+        if (!convertedQuery) return;
+
+        setIsFormatting(true);
+
+        try {
+            const result = await sqlFormattingService.formatQuery(convertedQuery);
+
+            if (result.success) {
+                setConvertedQuery(result.formatted_query);
+                toast.success("Output query formatted");
+            } else {
+                toast.error("Failed to format output", {
+                    description: result.warnings?.join(' ') || "Unknown error occurred",
+                });
+            }
+        } catch (error) {
+            console.error('Error formatting output query:', error);
+            toast.error("Error connecting to the formatting API");
+        } finally {
+            setIsFormatting(false);
+        }
+    };
+
+    // Minify output query
+    const minifyOutputQuery = async () => {
+        if (!convertedQuery) return;
+
+        setIsMinifying(true);
+
+        try {
+            const result = await sqlFormattingService.minifyQuery(convertedQuery);
+
+            if (result.success) {
+                setConvertedQuery(result.formatted_query);
+                toast.success("Output query minified");
+            } else {
+                toast.error("Failed to minify output", {
+                    description: result.warnings?.join(' ') || "Unknown error occurred",
+                });
+            }
+        } catch (error) {
+            console.error('Error minifying output query:', error);
+            toast.error("Error connecting to the minification API");
+        } finally {
+            setIsMinifying(false);
         }
     };
 
@@ -344,6 +477,36 @@ export default function SqlConverter() {
                                         className="hidden"
                                     />
                                 </Button>
+
+                                {/* SQL Formatting Dropdown Menu */}
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            disabled={!sqlQuery || isFormatting || isMinifying}
+                                            className="flex items-center gap-1 text-xs"
+                                        >
+                                            {isFormatting || isMinifying ? (
+                                                <Loader2 size={14} className="animate-spin" />
+                                            ) : (
+                                                <AlignLeft size={14} />
+                                            )}
+                                            Format Options
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent>
+                                        <DropdownMenuItem onClick={handleFormatQuery}>
+                                            <AlignLeft className="mr-2 h-4 w-4" />
+                                            <span>Beautify SQL</span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={handleMinifyQuery}>
+                                            <Minimize className="mr-2 h-4 w-4" />
+                                            <span>Minify SQL</span>
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+
                                 <Button
                                     variant="outline"
                                     size="sm"
@@ -357,6 +520,35 @@ export default function SqlConverter() {
                             </>
                         ) : (
                             <>
+                                {/* Output tab actions */}
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            disabled={!convertedQuery || isFormatting || isMinifying}
+                                            className="flex items-center gap-1 text-xs"
+                                        >
+                                            {isFormatting || isMinifying ? (
+                                                <Loader2 size={14} className="animate-spin" />
+                                            ) : (
+                                                <AlignLeft size={14} />
+                                            )}
+                                            Format Options
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent>
+                                        <DropdownMenuItem onClick={formatOutputQuery}>
+                                            <AlignLeft className="mr-2 h-4 w-4" />
+                                            <span>Beautify SQL</span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={minifyOutputQuery}>
+                                            <Minimize className="mr-2 h-4 w-4" />
+                                            <span>Minify SQL</span>
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+
                                 <Button
                                     variant="outline"
                                     size="sm"
@@ -436,14 +628,67 @@ export default function SqlConverter() {
                                         render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel>SQL Query</FormLabel>
-                                                <FormControl>
-                                                    <Textarea
-                                                        placeholder="Paste your SQL query here or upload a file..."
-                                                        className="font-mono min-h-[260px] resize-y mb-6"
-                                                        {...field}
-                                                        disabled={isConverting}
-                                                    />
-                                                </FormControl>
+                                                <div className="space-y-1.5">
+                                                    <div className="flex justify-end gap-2">
+                                                        <TooltipProvider>
+                                                            <Tooltip>
+                                                                <TooltipTrigger asChild>
+                                                                    <Button
+                                                                        type="button"
+                                                                        variant="outline"
+                                                                        size="sm"
+                                                                        onClick={handleFormatQuery}
+                                                                        disabled={!sqlQuery || isFormatting}
+                                                                        className="h-7 px-2 text-xs"
+                                                                    >
+                                                                        {isFormatting ? (
+                                                                            <Loader2 className="h-3 w-3 animate-spin" />
+                                                                        ) : (
+                                                                            <AlignLeft className="h-3 w-3 mr-1" />
+                                                                        )}
+                                                                        Beautify
+                                                                    </Button>
+                                                                </TooltipTrigger>
+                                                                <TooltipContent>
+                                                                    <p>Format SQL with proper indentation</p>
+                                                                </TooltipContent>
+                                                            </Tooltip>
+                                                        </TooltipProvider>
+
+                                                        <TooltipProvider>
+                                                            <Tooltip>
+                                                                <TooltipTrigger asChild>
+                                                                    <Button
+                                                                        type="button"
+                                                                        variant="outline"
+                                                                        size="sm"
+                                                                        onClick={handleMinifyQuery}
+                                                                        disabled={!sqlQuery || isMinifying}
+                                                                        className="h-7 px-2 text-xs"
+                                                                    >
+                                                                        {isMinifying ? (
+                                                                            <Loader2 className="h-3 w-3 animate-spin" />
+                                                                        ) : (
+                                                                            <Minimize className="h-3 w-3 mr-1" />
+                                                                        )}
+                                                                        Minify
+                                                                    </Button>
+                                                                </TooltipTrigger>
+                                                                <TooltipContent>
+                                                                    <p>Compress SQL by removing whitespace</p>
+                                                                </TooltipContent>
+                                                            </Tooltip>
+                                                        </TooltipProvider>
+                                                    </div>
+                                                    <FormControl>
+                                                        <Textarea
+                                                            placeholder="Paste your SQL query here or upload a file..."
+                                                            className="font-mono min-h-[260px] resize-y"
+                                                            {...field}
+                                                            disabled={isConverting || isFormatting || isMinifying}
+                                                        />
+                                                    </FormControl>
+                                                </div>
                                                 <FormMessage />
                                             </FormItem>
                                         )}
@@ -573,6 +818,50 @@ export default function SqlConverter() {
                                                         </TooltipContent>
                                                     </Tooltip>
                                                 </TooltipProvider>
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="secondary"
+                                                                className="h-8 bg-primary/90 text-primary-foreground hover:bg-primary/70"
+                                                                onClick={formatOutputQuery}
+                                                                disabled={isFormatting}
+                                                            >
+                                                                {isFormatting ? (
+                                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                                ) : (
+                                                                    <AlignLeft className="h-4 w-4" />
+                                                                )}
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>Format SQL</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="secondary"
+                                                                className="h-8 bg-primary/90 text-primary-foreground hover:bg-primary/70"
+                                                                onClick={minifyOutputQuery}
+                                                                disabled={isMinifying}
+                                                            >
+                                                                {isMinifying ? (
+                                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                                ) : (
+                                                                    <Minimize className="h-4 w-4" />
+                                                                )}
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>Minify SQL</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
                                             </div>
                                             <SyntaxHighlighter
                                                 language="sql"
@@ -647,7 +936,7 @@ export default function SqlConverter() {
             </Tabs>
 
             {/* Feature Highlights */}
-            <div className="grid gap-6 md:grid-cols-3 mt-6">
+            <div className="grid gap-6 md:grid-cols-4 mt-6">
                 <Card className="transition-all hover:border-primary/50 hover:shadow-md">
                     <CardHeader className="p-4">
                         <CardTitle className="flex items-center gap-2 text-base">
@@ -675,12 +964,24 @@ export default function SqlConverter() {
                 <Card className="transition-all hover:border-primary/50 hover:shadow-md">
                     <CardHeader className="p-4">
                         <CardTitle className="flex items-center gap-2 text-base">
-                            <FileCode size={18} className="text-green-500" />
-                            Export & Share
+                            <AlignLeft size={18} className="text-blue-500" />
+                            SQL Beautifier
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="px-4 pb-4 text-sm text-muted-foreground">
-                        Download your converted queries as SQL files or copy them directly to your clipboard for immediate use.
+                        Format your SQL with proper indentation and spacing for better readability and maintainability.
+                    </CardContent>
+                </Card>
+
+                <Card className="transition-all hover:border-primary/50 hover:shadow-md">
+                    <CardHeader className="p-4">
+                        <CardTitle className="flex items-center gap-2 text-base">
+                            <Minimize size={18} className="text-green-500" />
+                            SQL Minifier
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="px-4 pb-4 text-sm text-muted-foreground">
+                        Compress your SQL by removing comments and unnecessary whitespace for smaller file sizes and improved performance.
                     </CardContent>
                 </Card>
             </div>

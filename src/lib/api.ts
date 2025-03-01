@@ -1,3 +1,4 @@
+// src/lib/api.ts
 import axios from 'axios';
 import { toast } from "sonner";
 
@@ -65,6 +66,41 @@ export const sqlMigrationService = {
         if (response.data.success) {
             // Decode the converted query
             response.data.converted_query = atob(response.data.converted_query);
+        }
+
+        return response.data;
+    },
+};
+
+// SQL Formatting service
+export const sqlFormattingService = {
+    formatQuery: async (sqlQuery: string) => {
+        // Base64 encode the query
+        const encodedQuery = btoa(sqlQuery);
+
+        const response = await api.post('/sql-formatting/format', {
+            original_query: encodedQuery,
+        });
+
+        if (response.data.success) {
+            // Decode the formatted query
+            response.data.formatted_query = atob(response.data.formatted_query);
+        }
+
+        return response.data;
+    },
+
+    minifyQuery: async (sqlQuery: string) => {
+        // Base64 encode the query
+        const encodedQuery = btoa(sqlQuery);
+
+        const response = await api.post('/sql-formatting/minify', {
+            original_query: encodedQuery,
+        });
+
+        if (response.data.success) {
+            // Decode the minified query
+            response.data.formatted_query = atob(response.data.formatted_query);
         }
 
         return response.data;
