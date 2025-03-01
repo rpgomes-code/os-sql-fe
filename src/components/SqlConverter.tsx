@@ -392,8 +392,8 @@ export default function SqlConverter() {
                                                     </FormControl>
                                                     <SelectContent>
                                                         <SelectItem value="sqlserver">SQL Server</SelectItem>
-                                                        <SelectItem value="oracle">Oracle Database</SelectItem>
-                                                        <SelectItem value="mysql">MySQL</SelectItem>
+                                                        <SelectItem value="oracle" disabled>Oracle Database</SelectItem>
+                                                        <SelectItem value="mysql" disabled>MySQL</SelectItem>
                                                     </SelectContent>
                                                 </Select>
                                                 <FormDescription>
@@ -413,7 +413,7 @@ export default function SqlConverter() {
                                                 <FormControl>
                                                     <Textarea
                                                         placeholder="Paste your SQL query here or upload a file..."
-                                                        className="font-mono min-h-[260px] resize-y"
+                                                        className="font-mono min-h-[260px] resize-y mb-6"
                                                         {...field}
                                                         disabled={isConverting}
                                                     />
@@ -424,7 +424,7 @@ export default function SqlConverter() {
                                     />
 
                                     {isConverting && (
-                                        <div className="space-y-2">
+                                        <div className="space-y-2 mb-6">
                                             <div className="flex justify-between text-xs">
                                                 <span>Converting query...</span>
                                                 <span>{Math.round(conversionProgress)}%</span>
